@@ -6,7 +6,7 @@
 
 (enable-console-print!)
 
-(def app-state (atom {:result ""}))
+(def app-state (atom {}))
 
 (defn do-calc [{:keys [ohms amps volts]}]
   (cond
@@ -30,6 +30,21 @@
 
 (defn entry-pane [app owner]
   (reify
+    om/IInitState
+    (init-state [_]
+      {:calculate (chan)
+       :ohms ""
+       :amps ""
+       :volts ""})
+    om/IWillMount
+    (will-mount [_]
+      (let [calculate (om/get-state owner :calculate)]
+        (go (loop []
+              (let [inputs (<! calculate)]
+                (om/transact! app
+                              (fn [xs]
+                                (assoc xs :result (do-calc inputs))))
+                (recur))))))
     om/IRenderState
     (render-state [this state]
       (dom/div #js {:className "entry-pane"}
@@ -60,26 +75,10 @@
 
 (defn calculator-view [app owner]
   (reify
-    om/IInitState
-    (init-state [_]
-      {:calculate (chan)
-       :ohms ""
-       :amps ""
-       :volts ""})
-    om/IWillMount
-    (will-mount [_]
-      (let [calculate (om/get-state owner :calculate)]
-        (go (loop []
-              (let [inputs (<! calculate)]
-                (om/transact! app
-                              (fn [xs]
-                                (assoc xs :result (do-calc inputs))))
-                (recur))))))
-    om/IRenderState
-    (render-state  [this state]
+    om/IRender
+    (render  [this]
       (dom/div nil
-               (om/build entry-pane app
-                         {:init-state state})
+               (om/build entry-pane app)
                (om/build result-pane app)))))
 
 (om/root
