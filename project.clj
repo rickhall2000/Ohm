@@ -1,5 +1,5 @@
-(defproject ohm "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
+(defproject ohm "0.1.0"
+  :description "Ohms law calculator demo written with Om"
   :url "http://example.com/FIXME"
 
   :dependencies [[org.clojure/clojure "1.5.1"]
